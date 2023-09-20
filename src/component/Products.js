@@ -39,7 +39,7 @@ const Products = () => {
         </div>
       </div>
       <div className="row justify-content-center">
-        <div className="buttons d-flex justify-content-center mp-5 pb-5">
+        <div className="buttons d-flex justify-content-center flex-column flex-md-row align-items-center gap-3 mp-5 pb-5">
           {['All', ...allCategories].map((category) => (
             <button
               className={`btn btn-outline-primary me-2 ${
