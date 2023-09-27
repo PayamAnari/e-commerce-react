@@ -1,62 +1,124 @@
 import React, { useState, useEffect } from 'react';
-import allProducts from '../fake-data/all-products';
-import allCategories from '../fake-data/all-categories';
-import ProductCard from './ProductCard';
+import Skeleton from 'react-loading-skeleton';
+import { NavLink } from 'react-router-dom';
+import Buttons from './Buttons';
 
 const Products = () => {
-  const [filter, setFilter] = useState(allProducts);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-
-  const categoryKey = 'selectedCategory';
+  const [data, setData] = useState([]);
+  const [filter, setFilter] = useState(data);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const categoryLocalStorage = localStorage.getItem(categoryKey);
-    setSelectedCategory(categoryLocalStorage || 'All');
+    let componentMounted = true;
+
+    const getProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('http://fakestoreapi.com/products');
+        if (response.ok) {
+          if (componentMounted) {
+            const jsonData = await response.clone().json();
+            setData(jsonData);
+            setFilter(jsonData);
+            setLoading(false);
+          }
+        } else {
+          throw new Error('Error fetching products');
+        }
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+
+    getProducts();
+
+    return () => {
+      componentMounted = false;
+    };
   }, []);
 
-  useEffect(() => {
-    const filterProducts =
-      selectedCategory === 'All'
-        ? allProducts
-        : allProducts.filter(
-            (product) => product.category === selectedCategory.substring(6),
+  const Loading = () => {
+    return (
+      <>
+        <div className="col-12 text-center">
+          <h3>Loading...</h3>
+        </div>
+        <div className="col-md-3">
+          <Skeleton height={350} />
+        </div>
+        <div className="col-md-3">
+          <Skeleton height={350} />
+        </div>
+        <div className="col-md-3">
+          <Skeleton height={350} />
+        </div>
+        <div className="col-md-3">
+          <Skeleton height={350} />
+        </div>
+      </>
+    );
+  };
+
+  const filterProducts = (cat) => {
+    const updatedList =
+      cat === 'All' ? data : data.filter((x) => x.category === cat);
+    setFilter(updatedList);
+  };
+
+  const ShowProducts = () => {
+    return (
+      <>
+        <Buttons filterProducts={filterProducts} />
+        {filter.map((product) => {
+          return (
+            <div className="col-md-4 mb-4" key={product.id}>
+              <div className="card h-100 text-center p-4">
+                <img
+                  src={product.image}
+                  className="card-img-top"
+                  alt={product.title}
+                  height="250px"
+                />
+                <div className="card-body">
+                  <h5 className="card-title mb-2">{product.title}</h5>
+                  <p className="card-text fw-bold">${product.price}</p>
+                  <NavLink
+                    to={`/products/${product.id}`}
+                    className="btn btn-outline-dark"
+                  >
+                    Buy Now
+                  </NavLink>
+                </div>
+              </div>
+            </div>
           );
-    setFilter(filterProducts);
-
-    localStorage.setItem(categoryKey, selectedCategory);
-  }, [selectedCategory]);
-
-  const handleCategory = (category) => {
-    setSelectedCategory(category);
+        })}
+      </>
+    );
   };
 
   return (
-    <div className="container my-5 py5 products-area">
-      <div className="row">
-        <div className="col-12 mb-5">
-          <h1 className="display-6 fw-bolder text-center"> Latest Products</h1>
-          <hr />
+    <>
+      <div className="container my-5 py-5">
+        <div className="row">
+          <div className="col-12 mb-5">
+            <h1 className="display-6 fw-bolder text-center">Latest Products</h1>
+            <hr />
+          </div>
+        </div>
+        <div className="row justify-content-center">
+          {loading ? (
+            <Loading />
+          ) : error ? (
+            <div>Error: {error}</div>
+          ) : (
+            <ShowProducts />
+          )}
         </div>
       </div>
-      <div className="row justify-content-center">
-        <div className="buttons d-flex justify-content-center flex-column flex-md-row align-items-center gap-3 mp-5 pb-5">
-          {['All', ...allCategories].map((category) => (
-            <button
-              className={`btn btn-outline-primary me-2 ${
-                selectedCategory === category ? 'active' : ''
-              }`}
-              key={category}
-              onClick={() => handleCategory(category)}
-            >
-              {category === 'All' ? category : category.substring(6)}
-            </button>
-          ))}
-        </div>
-        {filter.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </div>
+    </>
   );
 };
 
