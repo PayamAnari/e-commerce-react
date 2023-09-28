@@ -15,7 +15,7 @@ const Products = () => {
     const getProducts = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://fakestoreapi.com/products');
+        const response = await fetch('https://fakestoreapi.com/products');
         if (response.ok) {
           if (componentMounted) {
             const jsonData = await response.clone().json();

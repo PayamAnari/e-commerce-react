@@ -13,7 +13,7 @@ const ProductCard = () => {
       setLoading(true);
 
       try {
-        const response = await fetch(`http://fakestoreapi.com/products/${id}`);
+        const response = await fetch(`https://fakestoreapi.com/products/${id}`);
         if (response.ok) {
           const data = await response.json();
           setProduct(data);
